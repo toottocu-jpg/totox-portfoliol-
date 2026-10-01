@@ -1,0 +1,228 @@
+const projectGrid = document.querySelector('#project-grid');
+const contactForm = document.querySelector('#contact-form');
+const formStatus = document.querySelector('#form-status');
+const adminOverlay = document.querySelector('#admin-overlay');
+const projectForm = document.querySelector('#project-form');
+const projectStatus = document.querySelector('#project-status');
+const authOverlay = document.querySelector('#auth-overlay');
+const authForm = document.querySelector('#auth-form');
+const authStatus = document.querySelector('#auth-status');
+const authSwitch = document.querySelector('#auth-switch');
+const accountOpen = document.querySelector('#account-open');
+const accountMenu = document.querySelector('#account-menu');
+const settingsOverlay = document.querySelector('#settings-overlay');
+const motionToggle = document.querySelector('#motion-toggle');
+const accentSelect = document.querySelector('#accent-select');
+let authMode = 'login';
+
+function showStatus(element, message, error = false) {
+  element.textContent = message;
+  element.style.color = error ? '#ff8b8b' : '';
+}
+
+function updateAuthMode() {
+  const register = authMode === 'register';
+  document.querySelector('#auth-title').textContent = register ? 'Kayıt ol.' : 'Giriş yap.';
+  document.querySelector('#auth-subtitle').textContent = register ? 'Yeni hesabını oluştur ve portföy alanına katıl.' : 'Portföy alanına devam etmek için hesabına giriş yap.';
+  document.querySelector('#auth-submit').innerHTML = register ? 'Kayıt ol <span>↗</span>' : 'Giriş yap <span>↗</span>';
+  authSwitch.textContent = register ? 'Zaten hesabın var mı? Giriş yap' : 'Hesabın yok mu? Kayıt ol';
+  authStatus.textContent = '';
+}
+
+async function refreshUserSession() {
+  const response = await fetch('/api/auth/session');
+  const data = await response.json();
+  accountOpen.textContent = data.authenticated ? 'Hesabım' : 'Giriş yap';
+  document.querySelector('#account-email').textContent = data.email || '—';
+  accountOpen.classList.toggle('logged-in', data.authenticated);
+}
+
+function applyPreferences() {
+  const theme = localStorage.getItem('tottox-theme') || 'dark';
+  const accent = localStorage.getItem('tottox-accent') || '#b7ff3d';
+  const reducedMotion = localStorage.getItem('tottox-motion') === 'reduced';
+  document.documentElement.classList.toggle('light-theme', theme === 'light');
+  document.documentElement.classList.toggle('reduced-motion', reducedMotion);
+  document.documentElement.style.setProperty('--lime', accent);
+  document.querySelectorAll('[data-theme]').forEach((button) => button.classList.toggle('active', button.dataset.theme === theme));
+  accentSelect.value = accent;
+  motionToggle.checked = !reducedMotion;
+}
+
+function renderProjects(projects) {
+  projectGrid.replaceChildren();
+  projects.forEach((project) => {
+    const card = document.createElement('article');
+    card.className = 'project-card';
+    card.style.setProperty('--accent', project.accent);
+    card.innerHTML = `<div class="project-meta"><span class="project-tag">${project.category}</span><span>0${project.id}</span></div><div><h3>${project.title}</h3><p>${project.description}</p></div><div class="project-footer"><span>Selected work</span><span class="project-arrow">↗</span></div>`;
+    projectGrid.append(card);
+  });
+}
+
+async function loadProjects() {
+  const response = await fetch('/api/projects');
+  renderProjects(await response.json());
+}
+
+async function loadAdmin() {
+  const response = await fetch('/api/admin/summary');
+  const data = await response.json();
+  document.querySelector('#metric-messages').textContent = data.message_count;
+  document.querySelector('#metric-projects').textContent = data.project_count;
+  const list = document.querySelector('#message-list');
+  list.replaceChildren();
+  if (!data.messages.length) {
+    list.innerHTML = '<p class="empty">Henüz mesaj yok.</p>';
+    return;
+  }
+  data.messages.forEach((message) => {
+    const item = document.createElement('div');
+    item.className = 'message-item';
+    item.innerHTML = `<div><strong>${message.name}</strong><small>${message.email}</small></div><p>${message.message}</p>`;
+    list.append(item);
+  });
+}
+
+contactForm.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const button = contactForm.querySelector('button');
+  button.disabled = true;
+  showStatus(formStatus, 'Gönderiliyor...');
+  const data = Object.fromEntries(new FormData(contactForm));
+  try {
+    const response = await fetch('/api/messages', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data) });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error);
+    contactForm.reset();
+    showStatus(formStatus, result.message);
+  } catch (error) {
+    showStatus(formStatus, error.message || 'Bir hata oluştu.', true);
+  } finally {
+    button.disabled = false;
+  }
+});
+
+document.querySelector('#admin-open').addEventListener('click', async () => {
+  const sessionResponse = await fetch('/api/admin/session');
+  const currentSession = await sessionResponse.json();
+  if (!currentSession.authenticated) {
+    const password = window.prompt('Admin şifresi:');
+    if (password === null) return;
+    const loginResponse = await fetch('/api/admin/login', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({password})
+    });
+    if (!loginResponse.ok) {
+      window.alert('Şifre hatalı.');
+      return;
+    }
+  }
+  adminOverlay.classList.add('open');
+  adminOverlay.setAttribute('aria-hidden', 'false');
+  await loadAdmin();
+});
+document.querySelector('#admin-close').addEventListener('click', () => {
+  adminOverlay.classList.remove('open');
+  adminOverlay.setAttribute('aria-hidden', 'true');
+});
+adminOverlay.addEventListener('click', (event) => {
+  if (event.target === adminOverlay) adminOverlay.classList.remove('open');
+});
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape') adminOverlay.classList.remove('open');
+});
+
+projectForm.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const data = Object.fromEntries(new FormData(projectForm));
+  const response = await fetch('/api/admin/projects', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data) });
+  const result = await response.json();
+  if (!response.ok) {
+    showStatus(projectStatus, result.error, true);
+    return;
+  }
+  projectForm.reset();
+  showStatus(projectStatus, result.message);
+  await loadProjects();
+  await loadAdmin();
+});
+
+loadProjects().catch(() => showStatus(formStatus, 'Projeler yüklenemedi.', true));
+refreshUserSession();
+applyPreferences();
+
+accountOpen.addEventListener('click', async () => {
+  const response = await fetch('/api/auth/session');
+  const data = await response.json();
+  if (data.authenticated) {
+    accountMenu.classList.toggle('open');
+    accountMenu.setAttribute('aria-hidden', String(!accountMenu.classList.contains('open')));
+    return;
+  }
+  authMode = 'login';
+  updateAuthMode();
+  authOverlay.classList.add('open');
+  authOverlay.setAttribute('aria-hidden', 'false');
+});
+
+document.querySelector('#logout-button').addEventListener('click', async () => {
+  await fetch('/api/auth/logout', {method: 'POST'});
+  accountMenu.classList.remove('open');
+  await refreshUserSession();
+});
+document.querySelector('#settings-open').addEventListener('click', () => {
+  accountMenu.classList.remove('open');
+  settingsOverlay.classList.add('open');
+  settingsOverlay.setAttribute('aria-hidden', 'false');
+});
+document.querySelector('#settings-close').addEventListener('click', () => {
+  settingsOverlay.classList.remove('open');
+  settingsOverlay.setAttribute('aria-hidden', 'true');
+});
+settingsOverlay.addEventListener('click', (event) => {
+  if (event.target === settingsOverlay) settingsOverlay.classList.remove('open');
+});
+document.addEventListener('click', (event) => {
+  if (!event.target.closest('.account-area')) accountMenu.classList.remove('open');
+});
+document.querySelectorAll('[data-theme]').forEach((button) => button.addEventListener('click', () => {
+  localStorage.setItem('tottox-theme', button.dataset.theme);
+  applyPreferences();
+}));
+accentSelect.addEventListener('change', () => {
+  localStorage.setItem('tottox-accent', accentSelect.value);
+  applyPreferences();
+});
+motionToggle.addEventListener('change', () => {
+  localStorage.setItem('tottox-motion', motionToggle.checked ? 'full' : 'reduced');
+  applyPreferences();
+});
+
+document.querySelector('#auth-close').addEventListener('click', () => {
+  authOverlay.classList.remove('open');
+  authOverlay.setAttribute('aria-hidden', 'true');
+});
+authOverlay.addEventListener('click', (event) => {
+  if (event.target === authOverlay) authOverlay.classList.remove('open');
+});
+authSwitch.addEventListener('click', () => {
+  authMode = authMode === 'login' ? 'register' : 'login';
+  updateAuthMode();
+});
+authForm.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const data = Object.fromEntries(new FormData(authForm));
+  const endpoint = authMode === 'register' ? '/api/auth/register' : '/api/auth/login';
+  const response = await fetch(endpoint, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data)});
+  const result = await response.json();
+  if (!response.ok) {
+    showStatus(authStatus, result.error, true);
+    return;
+  }
+  authOverlay.classList.remove('open');
+  authOverlay.setAttribute('aria-hidden', 'true');
+  authForm.reset();
+  await refreshUserSession();
+});

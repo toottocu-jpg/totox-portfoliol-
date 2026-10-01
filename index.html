@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="tottox - web geliştirici ve tasarımcı portföyü.">
+  <title>tottox / Web geliştirici & tasarımcı</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="noise"></div>
+  <header class="topbar">
+    <a class="logo" href="#top" aria-label="Ana sayfa"><span class="logo-dot"></span>tottox<span class="logo-slash">/</span>26</a>
+    <nav class="nav-links" aria-label="Ana menü">
+      <a href="#work">İşler</a><a href="#about">Ben kimim</a><a href="#contact">İletişim</a>
+    </nav>
+    <div class="header-actions"><div class="account-area"><button class="account-button" id="account-open" type="button">Giriş yap</button><div class="account-menu" id="account-menu" aria-hidden="true"><span class="account-label">HESABIN</span><strong id="account-email">—</strong><button id="settings-open" type="button">Ayarlar <span>⚙</span></button><button id="logout-button" type="button">Çıkış yap <span>↗</span></button></div></div><button class="admin-button" id="admin-open" type="button"><span class="live-dot"></span> Admin paneli</button></div>
+  </header>
+
+  <main id="top">
+    <section class="hero section-pad">
+      <div class="hero-kicker"><span>01</span><i></i><span>PORTFÖY / 2026</span></div>
+      <div class="hero-grid">
+        <div class="hero-copy">
+          <h1>Fikirleri<br><em>ekrana</em> taşıyorum.</h1>
+          <p class="hero-lead">Web geliştirici ve tasarımcı olarak fikirleri hızlı, modern ve akılda kalan dijital deneyimlere dönüştürüyorum.</p>
+          <div class="hero-actions"><a class="button button-lime" href="#work">İşlerimi keşfet <span>↘</span></a><a class="text-link" href="#contact">Birlikte üretelim <span>↗</span></a></div>
+        </div>
+        <div class="hero-art" aria-label="Neon soyut ışık küresi">
+          <div class="orbit orbit-one"></div><div class="orbit orbit-two"></div><div class="orb-core"><span></span></div>
+          <div class="art-label label-top">CREATIVE<br>CODE <b>↗</b></div>
+          <div class="art-label label-bottom">DESIGN<br>DEVELOPMENT <b>✦</b></div>
+        </div>
+      </div>
+      <div class="hero-footer"><span>BAĞIMSIZ / İSTANBUL</span><span class="scroll-hint">Aşağı kaydır <b>↓</b></span><span>SON GÜNCELLEME / 01.10.26</span></div>
+    </section>
+
+    <section class="ticker" aria-label="Yetenekler"><div class="ticker-track"><span>STRATEGY</span><b>✦</b><span>ART DIRECTION</span><b>✦</b><span>FRONTEND</span><b>✦</b><span>CREATIVE CODE</span><b>✦</b><span>STRATEGY</span><b>✦</b><span>ART DIRECTION</span><b>✦</b></div></section>
+
+    <section class="work section-pad" id="work">
+      <div class="section-head"><div><span class="section-index">02 / SELECTED WORK</span><h2>İz bırakan<br><em>işler.</em></h2></div><p>Her proje için aynı reçeteyi değil, doğru soruyu buluyorum. Strateji, tasarım ve kod tek bir düşüncede buluşuyor.</p></div>
+      <div class="project-grid" id="project-grid"></div>
+    </section>
+
+    <section class="about section-pad" id="about">
+      <div class="about-aside"><span class="section-index">03 / ABOUT</span><div class="signal"><span></span><span></span><span></span><strong>ONLINE / OPEN FOR WORK</strong></div></div>
+      <div class="about-copy"><h2>Meraklı bir zihin,<br><em>üreten bir el.</em></h2><p>Ben totox. Web geliştirme ve tasarım alanında kendimi geliştiriyor, fikirleri anlaşılır ve etkileyici dijital deneyimlere dönüştürüyorum. Öğrenmeye, üretmeye ve her projede daha iyisini denemeye odaklanıyorum.</p><div class="about-stats"><div><strong>02</strong><span>odak alanı</span></div><div><strong>03</strong><span>başlangıç projesi</span></div><div><strong>∞</strong><span>öğrenme merakı</span></div></div></div>
+    </section>
+
+    <section class="contact section-pad" id="contact"><div class="contact-layout"><div><span class="section-index">04 / SAY HELLO</span><h2>Bir fikrin mi<br><em>var?</em></h2><p>Bir proje fikrin varsa anlat. Birlikte daha iyi bir hale getirelim.</p><a class="mail-link" href="mailto:tootttocu@gmail.com">tootttocu@gmail.com <span>↗</span></a></div><form id="contact-form" class="contact-form"><label>Adın <input name="name" placeholder="Nasıl hitap edelim?" required></label><label>E-posta <input name="email" type="email" placeholder="mail@ornek.com" required></label><label>Mesajın <textarea name="message" rows="4" placeholder="Projen birkaç cümleyle nasıl?" required></textarea></label><button class="button button-lime" type="submit">Mesajı gönder <span>↗</span></button><p class="form-status" id="form-status" aria-live="polite"></p></form></div></section>
+  </main>
+
+  <footer class="footer section-pad"><a class="logo" href="#top"><span class="logo-dot"></span>tottox<span class="logo-slash">/</span>26</a><span>Made with intent, not templates.</span><span>© 2026 totox.</span></footer>
+
+  <div class="auth-overlay" id="auth-overlay" aria-hidden="true"><div class="auth-card"><button class="icon-close" id="auth-close" aria-label="Giriş penceresini kapat" type="button">×</button><span class="section-index">MEMBER ACCESS</span><h2 id="auth-title">Giriş yap.</h2><p id="auth-subtitle">Portföy alanına devam etmek için hesabına giriş yap.</p><form id="auth-form" class="auth-form"><label>E-posta<input name="email" type="email" placeholder="mail@ornek.com" required></label><label>Şifre<input name="password" type="password" placeholder="En az 6 karakter" minlength="6" required></label><button class="button button-lime" type="submit" id="auth-submit">Giriş yap <span>↗</span></button><p class="form-status" id="auth-status" aria-live="polite"></p></form><button class="auth-switch" id="auth-switch" type="button">Hesabın yok mu? Kayıt ol</button></div></div>
+  <div class="settings-overlay" id="settings-overlay" aria-hidden="true"><div class="settings-card"><div class="settings-head"><div><span class="section-index">PERSONAL SPACE</span><h2>Ayarlar.</h2></div><button class="icon-close" id="settings-close" aria-label="Ayarları kapat" type="button">×</button></div><div class="setting-row"><div><strong>Görünüm</strong><small>Arayüz temasını seç</small></div><div class="segmented"><button class="setting-choice active" data-theme="dark" type="button">Karanlık</button><button class="setting-choice" data-theme="light" type="button">Aydınlık</button></div></div><div class="setting-row"><div><strong>Neon rengi</strong><small>Vurguları kişiselleştir</small></div><select id="accent-select"><option value="#b7ff3d">Lime</option><option value="#78e8ff">Cyan</option><option value="#ff68dc">Pembe</option><option value="#ffb86b">Amber</option></select></div><div class="setting-row"><div><strong>Hareket</strong><small>Animasyonları azalt</small></div><label class="toggle"><input id="motion-toggle" type="checkbox" checked><span></span></label></div><p class="settings-note" id="settings-note">Tercihlerin bu tarayıcıda saklanır.</p></div></div>
+  <div class="admin-overlay" id="admin-overlay" aria-hidden="true"><div class="admin-panel"><div class="admin-top"><div><span class="section-index">CONTROL ROOM / 01</span><h2>Hoş geldin, totox.</h2></div><button class="icon-close" id="admin-close" aria-label="Paneli kapat" type="button">×</button></div><div class="admin-status"><span class="status-led"></span><strong>Sistemler çalışıyor</strong><span>localhost / flask server</span></div><div class="admin-metrics"><div><span>GELEN MESAJ</span><strong id="metric-messages">—</strong></div><div><span>PROJE SAYISI</span><strong id="metric-projects">—</strong></div><div><span>DURUM</span><strong class="green-text">AÇIK</strong></div></div><div class="admin-columns"><section class="admin-box"><div class="box-head"><h3>Son mesajlar</h3><span>LIVE DATA</span></div><div id="message-list" class="message-list"><p class="empty">Veriler yükleniyor...</p></div></section><section class="admin-box"><div class="box-head"><h3>Yeni proje ekle</h3><span>DATABASE</span></div><form id="project-form" class="project-form"><input name="title" placeholder="Proje adı" required><input name="category" placeholder="Kategori" required><textarea name="description" rows="3" placeholder="Kısa açıklama" required></textarea><label class="color-field">Vurgu rengi <input name="accent" type="color" value="#b6ff3f"></label><button class="button button-lime" type="submit">Projeyi ekle <span>+</span></button><p class="form-status" id="project-status" aria-live="polite"></p></form></section></div></div></div>
+  <script src="app.js"></script>
+</body>
+</html>

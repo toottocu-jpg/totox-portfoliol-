@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: totox-portfolio
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app
+    envVars:
+      - key: PORTFOLIO_SECRET_KEY
+        generateValue: true
+      - key: PORTFOLIO_ADMIN_PASSWORD
+        sync: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: totox-db
+          property: connectionString
+
+databases:
+  - name: totox-db
+    databaseName: portfolio
+    user: portfolio
