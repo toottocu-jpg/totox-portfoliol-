@@ -4,6 +4,8 @@ const formStatus = document.querySelector('#form-status');
 const adminOverlay = document.querySelector('#admin-overlay');
 const projectForm = document.querySelector('#project-form');
 const projectStatus = document.querySelector('#project-status');
+const liveTime = document.querySelector('#live-time');
+const liveDate = document.querySelector('#live-date');
 const authOverlay = document.querySelector('#auth-overlay');
 const authForm = document.querySelector('#auth-form');
 const authStatus = document.querySelector('#auth-status');
@@ -18,6 +20,12 @@ let authMode = 'login';
 function showStatus(element, message, error = false) {
   element.textContent = message;
   element.style.color = error ? '#ff8b8b' : '';
+}
+
+function updateClock() {
+  const now = new Date();
+  liveTime.textContent = now.toLocaleTimeString('tr-TR', {hour12: false});
+  liveDate.textContent = now.toLocaleDateString('tr-TR', {day: '2-digit', month: '2-digit', year: 'numeric'});
 }
 
 function updateAuthMode() {
@@ -152,6 +160,8 @@ projectForm.addEventListener('submit', async (event) => {
 loadProjects().catch(() => showStatus(formStatus, 'Projeler yüklenemedi.', true));
 refreshUserSession();
 applyPreferences();
+updateClock();
+setInterval(updateClock, 1000);
 
 accountOpen.addEventListener('click', async () => {
   const response = await fetch('/api/auth/session');
