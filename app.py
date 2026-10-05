@@ -180,7 +180,11 @@ def admin_summary():
         project_count = db_execute(connection, "SELECT COUNT(*) AS count FROM projects").fetchone()["count"]
         latest = db_execute(
             connection,
-            "SELECT id, name, email, message, created_at FROM messages ORDER BY id DESC LIMIT 6"
+            "SELECT id, name, email, message, created_at FROM messages ORDER BY id DESC LIMIT 8"
+        ).fetchall()
+        projects = db_execute(
+            connection,
+            "SELECT id, title, category FROM projects ORDER BY id DESC"
         ).fetchall()
     return jsonify(
         {
@@ -188,27 +192,34 @@ def admin_summary():
             "project_count": project_count,
             "availability": "Açık",
             "messages": [dict(row) for row in latest],
+            "projects": [dict(row) for row in projects],
         }
     )
 
 
-@app.post("/api/admin/projects")
-@admin_required
-def create_project():
-    data = request.get_json(silent=True) or {}
-    title = str(data.get("title", "")).strip()
-    category = str(data.get("category", "")).strip()
-    description = str(data.get("description", "")).strip()
-    accent = str(data.get("accent", "#b6ff3f")).strip()
-    if not title or not category or not description:
-        return jsonify({"error": "Proje bilgileri eksik."}), 400
+def delete_row(table, row_id):
+    if table not in {"messages", "projects"}:
+        return False
     with get_db() as connection:
-        db_execute(
-            connection,
-            "INSERT INTO projects (title, category, description, accent) VALUES (?, ?, ?, ?)",
-            (title, category, description, accent),
-        )
-    return jsonify({"message": "Proje eklendi."}), 201
+        cursor = db_execute(connection, f"DELETE FROM {table} WHERE id = ?", (row_id,))
+        deleted = cursor.rowcount
+    return deleted > 0
+
+
+@app.delete("/api/admin/projects/<int:project_id>")
+@admin_required
+def delete_project(project_id):
+    if not delete_row("projects", project_id):
+        return jsonify({"error": "Proje bulunamadı."}), 404
+    return jsonify({"message": "Proje silindi."})
+
+
+@app.delete("/api/admin/messages/<int:message_id>")
+@admin_required
+def delete_message(message_id):
+    if not delete_row("messages", message_id):
+        return jsonify({"error": "Mesaj bulunamadı."}), 404
+    return jsonify({"message": "Mesaj silindi."})
 
 
 init_db()
