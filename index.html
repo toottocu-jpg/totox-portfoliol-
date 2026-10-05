@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=sil-1">
 </head>
 <body>
   <div class="noise"></div>
@@ -17,7 +17,7 @@
     <nav class="nav-links" aria-label="Ana menü">
       <a href="#work">İşler</a><a href="#about">Ben kimim</a><a href="#contact">İletişim</a>
     </nav>
-    <div class="header-actions"><div class="account-area"><button class="account-button" id="account-open" type="button">Giriş yap</button><div class="account-menu" id="account-menu" aria-hidden="true"><span class="account-label">HESABIN</span><strong id="account-email">—</strong><button id="settings-open" type="button">Ayarlar <span>⚙</span></button><button id="logout-button" type="button">Çıkış yap <span>↗</span></button></div></div><button class="admin-button" id="admin-open" type="button"><span class="live-dot"></span> Admin paneli</button></div>
+    <div class="header-actions"><div class="account-area"><button class="account-button" id="account-open" type="button">Giriş yap</button><div class="account-menu" id="account-menu" aria-hidden="true"><span class="account-label">HESABIN</span><strong id="account-email">—</strong><button id="settings-open" type="button">Ayarlar <span>⚙</span></button><button id="logout-button" type="button">Çıkış yap <span>↗</span></button></div></div><button class="admin-button" id="admin-open" type="button"><span class="live-dot"></span> Panel</button></div>
   </header>
 
   <main id="top">
@@ -58,7 +58,98 @@
 
   <div class="auth-overlay" id="auth-overlay" aria-hidden="true"><div class="auth-card"><button class="icon-close" id="auth-close" aria-label="Giriş penceresini kapat" type="button">×</button><span class="section-index">MEMBER ACCESS</span><h2 id="auth-title">Giriş yap.</h2><p id="auth-subtitle">Portföy alanına devam etmek için hesabına giriş yap.</p><form id="auth-form" class="auth-form"><label>E-posta<input name="email" type="email" placeholder="mail@ornek.com" required></label><label>Şifre<input name="password" type="password" placeholder="En az 6 karakter" minlength="6" required></label><button class="button button-lime" type="submit" id="auth-submit">Giriş yap <span>↗</span></button><p class="form-status" id="auth-status" aria-live="polite"></p></form><button class="auth-switch" id="auth-switch" type="button">Hesabın yok mu? Kayıt ol</button></div></div>
   <div class="settings-overlay" id="settings-overlay" aria-hidden="true"><div class="settings-card"><div class="settings-head"><div><span class="section-index">PERSONAL SPACE</span><h2>Ayarlar.</h2></div><button class="icon-close" id="settings-close" aria-label="Ayarları kapat" type="button">×</button></div><div class="setting-row"><div><strong>Görünüm</strong><small>Arayüz temasını seç</small></div><div class="segmented"><button class="setting-choice active" data-theme="dark" type="button">Karanlık</button><button class="setting-choice" data-theme="light" type="button">Aydınlık</button></div></div><div class="setting-row"><div><strong>Neon rengi</strong><small>Vurguları kişiselleştir</small></div><select id="accent-select"><option value="#b7ff3d">Lime</option><option value="#78e8ff">Cyan</option><option value="#ff68dc">Pembe</option><option value="#ffb86b">Amber</option></select></div><div class="setting-row"><div><strong>Hareket</strong><small>Animasyonları azalt</small></div><label class="toggle"><input id="motion-toggle" type="checkbox" checked><span></span></label></div><p class="settings-note" id="settings-note">Tercihlerin bu tarayıcıda saklanır.</p></div></div>
-  <div class="admin-overlay" id="admin-overlay" aria-hidden="true"><div class="admin-panel"><div class="admin-top"><div><span class="section-index">CONTROL ROOM / 01</span><h2>Hoş geldin, totox.</h2></div><button class="icon-close" id="admin-close" aria-label="Paneli kapat" type="button">×</button></div><div class="admin-status"><span class="status-led"></span><strong>Sistemler çalışıyor</strong><span>localhost / flask server</span></div><div class="admin-metrics"><div><span>GELEN MESAJ</span><strong id="metric-messages">—</strong></div><div><span>PROJE SAYISI</span><strong id="metric-projects">—</strong></div><div><span>DURUM</span><strong class="green-text">AÇIK</strong></div></div><div class="admin-columns"><section class="admin-box"><div class="box-head"><h3>Mesajları sil</h3><span>DELETE</span></div><div id="message-list" class="message-list"><p class="empty">Veriler yükleniyor...</p></div></section><section class="admin-box"><div class="box-head"><h3>Projeleri sil</h3><span>DELETE</span></div><div id="project-list" class="delete-list"><p class="empty">Veriler yükleniyor...</p></div></section></div></div></div>
-  <script src="app.js"></script>
+  <div class="admin-overlay" id="admin-overlay" aria-hidden="true">
+    <div class="admin-panel admin-panel-wide">
+      <div class="admin-top">
+        <div>
+          <span class="section-index">CONTROL ROOM / 01</span>
+          <h2>Hoş geldin, totox.</h2>
+        </div>
+        <div class="admin-top-actions">
+          <span class="admin-user"><span class="status-led"></span>Oturum açık</span>
+          <button class="admin-ghost" id="admin-logout" type="button">Çıkış yap <span>↗</span></button>
+          <button class="icon-close" id="admin-close" aria-label="Paneli kapat" type="button">×</button>
+        </div>
+      </div>
+
+      <div class="admin-status">
+        <span class="status-led"></span>
+        <strong>Sistemler çalışıyor</strong>
+        <span id="admin-status-meta">—</span>
+      </div>
+
+      <div class="admin-metrics">
+        <div><span>GELEN MESAJ</span><strong id="metric-messages">—</strong></div>
+        <div><span>PROJE SAYISI</span><strong id="metric-projects">—</strong></div>
+        <div><span>DURUM</span><strong class="green-text">AÇIK</strong></div>
+      </div>
+
+      <div class="admin-tabs" role="tablist" aria-label="Panel bölümleri">
+        <button class="admin-tab active" id="tab-projects" data-tab="projects" role="tab" aria-selected="true" aria-controls="panel-projects" type="button">Projeler <span class="tab-badge" id="badge-projects">0</span></button>
+        <button class="admin-tab" id="tab-messages" data-tab="messages" role="tab" aria-selected="false" aria-controls="panel-messages" type="button">Mesajlar <span class="tab-badge" id="badge-messages">0</span></button>
+      </div>
+
+      <div class="admin-panel-body">
+        <section class="admin-view" id="panel-projects" role="tabpanel" aria-labelledby="tab-projects">
+          <div class="admin-grid">
+            <div class="admin-box">
+              <div class="box-head"><h3 id="project-form-title">Yeni proje</h3><span id="project-form-tag">CREATE</span></div>
+              <form id="project-form" class="project-form" autocomplete="off">
+                <input id="project-id" name="id" type="hidden">
+                <label>Başlık
+                  <input name="title" placeholder="Örn. Neon Portföy" maxlength="80" required>
+                </label>
+                <label>Kategori
+                  <input name="category" placeholder="Örn. Web tasarımı" maxlength="40" required>
+                </label>
+                <label>Açıklama
+                  <textarea name="description" rows="3" placeholder="Projenin kısa özeti" maxlength="400" required></textarea>
+                </label>
+                <label class="accent-field">Vurgu rengi
+                  <span class="accent-input">
+                    <input id="project-accent-picker" type="color" value="#b6ff3f" tabindex="-1" aria-hidden="true">
+                    <input id="project-accent" name="accent" placeholder="#b6ff3f" maxlength="7" pattern="#[0-9a-fA-F]{6}" required>
+                  </span>
+                </label>
+                <div class="project-form-actions">
+                  <button class="button button-lime" type="submit" id="project-submit">Projeyi ekle <span>↗</span></button>
+                  <button class="admin-ghost" id="project-cancel" type="button" hidden>Vazgeç</button>
+                </div>
+                <p class="form-status" id="project-status" aria-live="polite"></p>
+              </form>
+            </div>
+
+            <div class="admin-box">
+              <div class="box-head"><h3>Kayıtlı projeler</h3><span>EDIT / DELETE</span></div>
+              <div id="project-list" class="delete-list"><p class="empty">Veriler yükleniyor...</p></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="admin-view" id="panel-messages" role="tabpanel" aria-labelledby="tab-messages" hidden>
+          <div class="admin-box">
+            <div class="box-head"><h3>Gelen mesajlar</h3><span>DELETE</span></div>
+            <div id="message-list" class="message-list"><p class="empty">Veriler yükleniyor...</p></div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <div class="admin-login-overlay" id="admin-login-overlay" aria-hidden="true">
+    <div class="auth-card admin-login-card">
+      <button class="icon-close" id="admin-login-close" aria-label="Kapat" type="button">×</button>
+      <span class="section-index">ADMIN ACCESS</span>
+      <h2>Sistem Girişi.</h2>
+      <p>Yönetim paneline erişmek için yetkili şifresini girin.</p>
+      <form id="admin-login-form" class="auth-form">
+        <label>Yönetici Şifresi<input name="password" type="password" placeholder="••••••••" required></label>
+        <button class="button button-lime" type="submit">Sisteme gir <span>↗</span></button>
+        <p class="form-status" id="admin-login-status" aria-live="polite"></p>
+      </form>
+    </div>
+  </div>
+
+  <script src="app.js?v=sil-1"></script>
 </body>
 </html>

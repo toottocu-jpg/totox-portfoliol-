@@ -13,6 +13,20 @@ const accountMenu = document.querySelector('#account-menu');
 const settingsOverlay = document.querySelector('#settings-overlay');
 const motionToggle = document.querySelector('#motion-toggle');
 const accentSelect = document.querySelector('#accent-select');
+const adminLoginOverlay = document.querySelector('#admin-login-overlay');
+const adminLoginForm = document.querySelector('#admin-login-form');
+const adminLoginStatus = document.querySelector('#admin-login-status');
+const adminLoginClose = document.querySelector('#admin-login-close');
+const adminLogout = document.querySelector('#admin-logout');
+const projectForm = document.querySelector('#project-form');
+const projectFormTitle = document.querySelector('#project-form-title');
+const projectFormTag = document.querySelector('#project-form-tag');
+const projectId = document.querySelector('#project-id');
+const projectSubmit = document.querySelector('#project-submit');
+const projectCancel = document.querySelector('#project-cancel');
+const projectStatus = document.querySelector('#project-status');
+const accentPicker = document.querySelector('#project-accent-picker');
+const adminState = {projects: [], messages: []};
 let authMode = 'login';
 
 function showStatus(element, message, error = false) {
@@ -90,21 +104,75 @@ function renderDeleteList(container, items, emptyText, mapItem) {
 
 async function loadAdmin() {
   const response = await fetch('/api/admin/summary');
+  if (response.status === 401) {
+    adminState.projects = [];
+    adminState.messages = [];
+    renderAdminLists();
+    throw new Error('Oturum sona erdi.');
+  }
   const data = await response.json();
+  adminState.projects = data.projects || [];
+  adminState.messages = data.messages || [];
   document.querySelector('#metric-messages').textContent = data.message_count;
   document.querySelector('#metric-projects').textContent = data.project_count;
-  renderDeleteList(document.querySelector('#message-list'), data.messages || [], 'Henüz mesaj yok.', (message) => {
+  document.querySelector('#badge-messages').textContent = data.message_count;
+  document.querySelector('#badge-projects').textContent = data.project_count;
+  document.querySelector('#admin-status-meta').textContent = `proje ${data.project_count} / mesaj ${data.message_count}`;
+  renderAdminLists();
+}
+
+function renderAdminLists() {
+  renderDeleteList(document.querySelector('#message-list'), adminState.messages, 'Henüz mesaj yok.', (message) => {
     const item = document.createElement('div');
     item.className = 'message-item';
     item.innerHTML = `<div><strong>${escapeHtml(message.name)}</strong><small>${escapeHtml(message.email)}</small><p>${escapeHtml(message.message)}</p></div><button class="delete-button" type="button" data-delete="messages" data-id="${message.id}">Sil</button>`;
     return item;
   });
-  renderDeleteList(document.querySelector('#project-list'), data.projects || [], 'Henüz proje yok.', (project) => {
+  renderDeleteList(document.querySelector('#project-list'), adminState.projects, 'Henüz proje yok.', (project) => {
     const item = document.createElement('div');
     item.className = 'message-item';
-    item.innerHTML = `<div><strong>${escapeHtml(project.title)}</strong><small>${escapeHtml(project.category)}</small></div><button class="delete-button" type="button" data-delete="projects" data-id="${project.id}">Sil</button>`;
+    item.innerHTML = `<div><strong>${escapeHtml(project.title)}</strong><small>${escapeHtml(project.category)} · ${escapeHtml(project.accent)}</small><p>${escapeHtml(project.description)}</p></div><div class="item-actions"><button class="edit-button" type="button" data-edit="${project.id}">Düzenle</button><button class="delete-button" type="button" data-delete="projects" data-id="${project.id}">Sil</button></div>`;
     return item;
   });
+}
+
+function switchTab(name) {
+  document.querySelectorAll('.admin-tab').forEach((tab) => {
+    const active = tab.dataset.tab === name;
+    tab.classList.toggle('active', active);
+    tab.setAttribute('aria-selected', String(active));
+  });
+  document.querySelector('#panel-projects').hidden = name !== 'projects';
+  document.querySelector('#panel-messages').hidden = name !== 'messages';
+}
+
+function resetProjectForm() {
+  projectForm.reset();
+  projectId.value = '';
+  projectFormTitle.textContent = 'Yeni proje';
+  projectFormTag.textContent = 'CREATE';
+  projectSubmit.innerHTML = 'Projeyi ekle <span>↗</span>';
+  projectCancel.hidden = true;
+  accentPicker.value = '#b6ff3f';
+  showStatus(projectStatus, '');
+}
+
+function startProjectEdit(id) {
+  const project = adminState.projects.find((entry) => String(entry.id) === String(id));
+  if (!project) return;
+  switchTab('projects');
+  projectId.value = project.id;
+  projectForm.elements.title.value = project.title;
+  projectForm.elements.category.value = project.category;
+  projectForm.elements.description.value = project.description;
+  accentPicker.value = project.accent || '#b6ff3f';
+  projectForm.elements.accent.value = accentPicker.value;
+  projectFormTitle.textContent = 'Projeyi düzenle';
+  projectFormTag.textContent = 'UPDATE';
+  projectSubmit.innerHTML = 'Değişiklikleri kaydet <span>↗</span>';
+  projectCancel.hidden = false;
+  showStatus(projectStatus, '');
+  projectForm.elements.title.focus();
 }
 
 contactForm.addEventListener('submit', async (event) => {
@@ -126,25 +194,130 @@ contactForm.addEventListener('submit', async (event) => {
   }
 });
 
-document.querySelector('#admin-open').addEventListener('click', async () => {
+function openAdminLogin() {
+  adminLoginStatus.textContent = '';
+  adminLoginOverlay.classList.add('open');
+  adminLoginOverlay.setAttribute('aria-hidden', 'false');
+  adminLoginForm.elements.password.value = '';
+  adminLoginForm.elements.password.focus();
+}
+
+function closeAdminLogin() {
+  adminLoginOverlay.classList.remove('open');
+  adminLoginOverlay.setAttribute('aria-hidden', 'true');
+}
+
+async function openAdminPanel() {
   const sessionResponse = await fetch('/api/admin/session');
   const currentSession = await sessionResponse.json();
   if (!currentSession.authenticated) {
-    const password = window.prompt('Admin şifresi:');
-    if (password === null) return;
-    const loginResponse = await fetch('/api/admin/login', {
+    openAdminLogin();
+    return;
+  }
+  adminOverlay.classList.add('open');
+  adminOverlay.setAttribute('aria-hidden', 'false');
+  resetProjectForm();
+  try {
+    await loadAdmin();
+  } catch {
+    adminOverlay.classList.remove('open');
+    adminOverlay.setAttribute('aria-hidden', 'true');
+    openAdminLogin();
+  }
+}
+
+document.querySelector('#admin-open').addEventListener('click', () => {
+  openAdminPanel().catch(() => openAdminLogin());
+});
+
+adminLoginClose.addEventListener('click', closeAdminLogin);
+adminLoginOverlay.addEventListener('click', (event) => {
+  if (event.target === adminLoginOverlay) closeAdminLogin();
+});
+
+adminLoginForm.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const button = adminLoginForm.querySelector('button');
+  const password = adminLoginForm.elements.password.value;
+  button.disabled = true;
+  showStatus(adminLoginStatus, 'Kontrol ediliyor...');
+  try {
+    const response = await fetch('/api/admin/login', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({password})
     });
-    if (!loginResponse.ok) {
-      window.alert('Şifre hatalı.');
+    const result = await response.json();
+    if (!response.ok) {
+      showStatus(adminLoginStatus, result.error || 'Giriş yapılamadı.', true);
+      adminLoginForm.elements.password.select();
       return;
     }
+    closeAdminLogin();
+    showStatus(adminLoginStatus, '');
+    adminOverlay.classList.add('open');
+    adminOverlay.setAttribute('aria-hidden', 'false');
+    resetProjectForm();
+    await loadAdmin();
+  } catch {
+    showStatus(adminLoginStatus, 'Sunucuya ulaşılamadı.', true);
+  } finally {
+    button.disabled = false;
   }
-  adminOverlay.classList.add('open');
-  adminOverlay.setAttribute('aria-hidden', 'false');
-  await loadAdmin();
+});
+
+adminLogout.addEventListener('click', async () => {
+  await fetch('/api/admin/logout', {method: 'POST'});
+  adminOverlay.classList.remove('open');
+  adminOverlay.setAttribute('aria-hidden', 'true');
+  resetProjectForm();
+  openAdminLogin();
+});
+
+document.querySelectorAll('.admin-tab').forEach((tab) => {
+  tab.addEventListener('click', () => switchTab(tab.dataset.tab));
+});
+
+projectCancel.addEventListener('click', resetProjectForm);
+
+accentPicker.addEventListener('input', () => {
+  projectForm.elements.accent.value = accentPicker.value;
+});
+projectForm.elements.accent.addEventListener('input', (event) => {
+  const value = event.target.value.trim();
+  if (/^#[0-9a-fA-F]{6}$/.test(value)) accentPicker.value = value;
+});
+
+projectForm.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const editingId = projectId.value;
+  const payload = {
+    title: projectForm.elements.title.value,
+    category: projectForm.elements.category.value,
+    description: projectForm.elements.description.value,
+    accent: projectForm.elements.accent.value
+  };
+  projectSubmit.disabled = true;
+  showStatus(projectStatus, 'Kaydediliyor...');
+  try {
+    const response = await fetch(
+      editingId ? `/api/admin/projects/${editingId}` : '/api/admin/projects',
+      {method: editingId ? 'PUT' : 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload)}
+    );
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      showStatus(projectStatus, result.error || 'Kaydedilemedi.', true);
+      return;
+    }
+    resetProjectForm();
+    showStatus(projectStatus, result.message);
+    await loadAdmin();
+    await loadProjects();
+  } catch {
+    showStatus(projectStatus, 'Sunucuya ulaşılamadı.', true);
+  } finally {
+    projectSubmit.disabled = false;
+  }
 });
 document.querySelector('#admin-close').addEventListener('click', () => {
   adminOverlay.classList.remove('open');
@@ -154,10 +327,18 @@ adminOverlay.addEventListener('click', (event) => {
   if (event.target === adminOverlay) adminOverlay.classList.remove('open');
 });
 document.addEventListener('keydown', (event) => {
-  if (event.key === 'Escape') adminOverlay.classList.remove('open');
+  if (event.key !== 'Escape') return;
+  if (adminLoginOverlay.classList.contains('open')) closeAdminLogin();
+  adminOverlay.classList.remove('open');
+  adminOverlay.setAttribute('aria-hidden', 'true');
 });
 
 adminOverlay.addEventListener('click', async (event) => {
+  const editButton = event.target.closest('[data-edit]');
+  if (editButton) {
+    startProjectEdit(editButton.dataset.edit);
+    return;
+  }
   const button = event.target.closest('[data-delete]');
   if (!button) return;
   const kind = button.dataset.delete;
