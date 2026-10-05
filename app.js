@@ -2,8 +2,6 @@ const projectGrid = document.querySelector('#project-grid');
 const contactForm = document.querySelector('#contact-form');
 const formStatus = document.querySelector('#form-status');
 const adminOverlay = document.querySelector('#admin-overlay');
-const projectForm = document.querySelector('#project-form');
-const projectStatus = document.querySelector('#project-status');
 const liveTime = document.querySelector('#live-time');
 const liveDate = document.querySelector('#live-date');
 const authOverlay = document.querySelector('#auth-overlay');
@@ -73,22 +71,39 @@ async function loadProjects() {
   renderProjects(await response.json());
 }
 
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;');
+}
+
+function renderDeleteList(container, items, emptyText, mapItem) {
+  container.replaceChildren();
+  if (!items.length) {
+    container.innerHTML = `<p class="empty">${emptyText}</p>`;
+    return;
+  }
+  items.forEach((item) => container.append(mapItem(item)));
+}
+
 async function loadAdmin() {
   const response = await fetch('/api/admin/summary');
   const data = await response.json();
   document.querySelector('#metric-messages').textContent = data.message_count;
   document.querySelector('#metric-projects').textContent = data.project_count;
-  const list = document.querySelector('#message-list');
-  list.replaceChildren();
-  if (!data.messages.length) {
-    list.innerHTML = '<p class="empty">Henüz mesaj yok.</p>';
-    return;
-  }
-  data.messages.forEach((message) => {
+  renderDeleteList(document.querySelector('#message-list'), data.messages || [], 'Henüz mesaj yok.', (message) => {
     const item = document.createElement('div');
     item.className = 'message-item';
-    item.innerHTML = `<div><strong>${message.name}</strong><small>${message.email}</small></div><p>${message.message}</p>`;
-    list.append(item);
+    item.innerHTML = `<div><strong>${escapeHtml(message.name)}</strong><small>${escapeHtml(message.email)}</small><p>${escapeHtml(message.message)}</p></div><button class="delete-button" type="button" data-delete="messages" data-id="${message.id}">Sil</button>`;
+    return item;
+  });
+  renderDeleteList(document.querySelector('#project-list'), data.projects || [], 'Henüz proje yok.', (project) => {
+    const item = document.createElement('div');
+    item.className = 'message-item';
+    item.innerHTML = `<div><strong>${escapeHtml(project.title)}</strong><small>${escapeHtml(project.category)}</small></div><button class="delete-button" type="button" data-delete="projects" data-id="${project.id}">Sil</button>`;
+    return item;
   });
 }
 
@@ -142,19 +157,23 @@ document.addEventListener('keydown', (event) => {
   if (event.key === 'Escape') adminOverlay.classList.remove('open');
 });
 
-projectForm.addEventListener('submit', async (event) => {
-  event.preventDefault();
-  const data = Object.fromEntries(new FormData(projectForm));
-  const response = await fetch('/api/admin/projects', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data) });
-  const result = await response.json();
+adminOverlay.addEventListener('click', async (event) => {
+  const button = event.target.closest('[data-delete]');
+  if (!button) return;
+  const kind = button.dataset.delete;
+  const id = button.dataset.id;
+  const label = kind === 'projects' ? 'projeyi' : 'mesajı';
+  if (!window.confirm(`Bu ${label} silmek istiyor musun?`)) return;
+  button.disabled = true;
+  const response = await fetch(`/api/admin/${kind}/${id}`, { method: 'DELETE' });
   if (!response.ok) {
-    showStatus(projectStatus, result.error, true);
+    const result = await response.json().catch(() => ({}));
+    window.alert(result.error || 'Silinemedi.');
+    button.disabled = false;
     return;
   }
-  projectForm.reset();
-  showStatus(projectStatus, result.message);
-  await loadProjects();
   await loadAdmin();
+  if (kind === 'projects') await loadProjects();
 });
 
 loadProjects().catch(() => showStatus(formStatus, 'Projeler yüklenemedi.', true));
